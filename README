@@ -1,0 +1,38 @@
+Maximal Self-Dissimilarity Interest Point Detector
+	Computer Vision Laboratory, University of Bologna
+		http://www.vision.deis.unibo.it
+
+This is an implementation of the work presented in the paper
+
+[1] F. Tombari, L. Di Stefano 
+“Interest Points via Maximal Self-Dissimilarities”
+12th Asian Conference on Computer Vision (ACCV), 2014
+
+We kindly request to cite and adequately refer to this work any time this code is 
+being used. 
+
+In the current distribution you can find 
+  -an implementation of the MSD descriptor 
+  -a test that demonstrates how to use it on a test image
+
+The current implementation of MSD extracts interest point out of grayscale images 
+at different scales. The input can be either a grayscale of a color image. The 
+detector returns a std::vector of cv::KeyPoint, an OpenCV structure which 
+associates each interest point to a 2D coordinate, a scale, a saliency value and 
+(optionally) a canonical orientation. The MSD algorithm can be used with the set
+of default parameters (those used in [1]), as well as with a set of user-defined
+parameters. 
+
+The MSD code is released under GNU GPL v3.0 license. 
+
+DEPENDENCIES and BUILD:
+The only required dependency is OpenCV (opencv.org, v3.0 or above). Boost (v1.49 or above, 
+www.boost.org) is not required, but used for multi-thread optimization. It is expected 
+that the running time of MSD can be sped up notably on a multi-core architecture by using 
+the provided Boost multi-thread optimization. 
+
+We provide a CMakeFile, so that the code can be build over different compilers and platforms
+by making use of CMake (www.cmake.org).
+
+CONTACTS:
+  Federico Tombari <federico.tombari@unibo.it> 
