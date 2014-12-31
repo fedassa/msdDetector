@@ -1,5 +1,5 @@
 
-//This file is part of the MSD-Detector project.
+//This file is part of the MSD-Detector project (github.com/fedassa/msdDetector).
 //
 //The MSD-Detector is free software : you can redistribute it and / or modify
 //it under the terms of the GNU General Public License as published by
@@ -12,7 +12,7 @@
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with Foobar.If not, see <http://www.gnu.org/licenses/>.
+//along with the MSD-Detector project.If not, see <http://www.gnu.org/licenses/>.
 // 
 // AUTHOR: Federico Tombari (fedassa@gmail.com)
 // University of Bologna, Open Perception
@@ -20,6 +20,7 @@
 #include "opencv/cv.hpp"
 #include "msd.h"
 
+#include <time.h>
 #include <iostream>
 
 void main()
@@ -28,24 +29,28 @@ void main()
 	std::string filename = "../../../data/flinstones.png";
 	cv::Mat img = cv::imread(filename, 0);
 	
+	MsdDetector msd;
+
 	//Mode 1: calling MSD detector with default parameters
-	std::vector<cv::KeyPoint> keypoints = msdDetector::msd_detector(img);
+	std::vector<cv::KeyPoint> keypoints = msd.detect(img);
+	
+	//Mode 2: calling MSD detector with custom parameters
+	//uncomment the following code and modify the default values where needed
+	/*setPatchRadius(3);
+	setSearchAreaRadius(5);
 
-	//Mode 2: calling MSD detector with custom parameters - uncomment the following code
-	/*int patch_radius = 3;
-	int search_area_radius = 5;
+	setNMSRadius(5);
+	setNMSScaleRadius(0);
 
-	int nms_radius = 5;
-	int nms_scale_radius = 0;
+	setThSaliency(250.0f);
+	setKNN(4);
 
-	float th_saliency = 250.0f;
-	int kNN = 4;
+	setScaleFactor(1.25f);
+	setNScales(-1);
 
-	float scale_factor = 1.25;
-	int n_scales = -1;
-	bool compute_orientation = false;
+	setComputeOrientation(false);
 
-	std::vector<cv::KeyPoint> keypoints = msdDetector::msd_detector(img, patch_radius, search_area_radius, nms_radius, nms_scale_radius, th_saliency, kNN, scale_factor, n_scales, compute_orientation);
+	std::vector<cv::KeyPoint> keypoints = msd.detect(img);
 	*/
 
 	std::cout << "Found " << keypoints.size() << " keypoints" << std::endl;

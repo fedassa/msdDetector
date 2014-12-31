@@ -1,5 +1,5 @@
 
-//This file is part of the MSD-Detector project.
+//This file is part of the MSD-Detector project (github.com/fedassa/msdDetector).
 //
 //The MSD-Detector is free software : you can redistribute it and / or modify
 //it under the terms of the GNU General Public License as published by
@@ -12,44 +12,25 @@
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with Foobar.If not, see <http://www.gnu.org/licenses/>.
+//along with the MSD-Detector project.If not, see <http://www.gnu.org/licenses/>.
 // 
 // AUTHOR: Federico Tombari (fedassa@gmail.com)
 // University of Bologna, Open Perception
+
 
 #include "msd.h"
 #include <assert.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-namespace msdDetector
-{
-
-	void convertMat2Array(cv::Mat &in, unsigned char * &out)
+	void MsdDetector::contextualSelfDissimilarity(cv::Mat &img, int xmin, int xmax, float* saliency)
 	{
+		int r_s = m_patch_radius;
+		int r_b = m_search_area_radius;
+		int k = m_kNN;
 
-		for (int j = 0; j<in.rows; j++)
-		{
-			for (int i = 0; i<in.cols; i++)
-			{
-				out[j*in.cols + i] = in.at<unsigned char>(j, i);
-			}
-		}
-
-	}
-
-	float computeAvgDistance(std::vector<int> &minVals, int den)
-	{
-		float avg_dist = 0.0f;
-		for (int i = 0; i<(int)minVals.size(); i++)
-			avg_dist += minVals[i];
-
-		avg_dist = avg_dist / den;
-		return avg_dist;
-	}
-
-	void contextualSelfDissimilarity_runningAvg(unsigned char *img, int w, int h, int xmin, int xmax, int r_s, int r_b, int k, float* saliency)
-	{
+		int w = img.cols;
+		int h = img.rows;
 
 		int side_s = 2 * r_s + 1;
 		int side_b = 2 * r_b + 1;
@@ -84,7 +65,7 @@ namespace msdDetector
 					vCol[x + u][ctrInd] = 0;
 					for (int v = -r_s; v <= r_s; v++)
 					{
-						temp = img[(j + v) * w + i + u] - img[(y + v) * w + x + u];
+						temp = img.at<unsigned char>(j + v, i + u) - img.at<unsigned char>(y + v, x + u);
 						vCol[x + u][ctrInd] += (temp*temp);
 					}
 					acc[ctrInd] += vCol[x + u][ctrInd];
@@ -126,7 +107,7 @@ namespace msdDetector
 					vCol[x + r_s][ctrInd] = 0;
 					for (int v = -r_s; v <= r_s; v++)
 					{
-						temp = img[(j + v) * w + i + r_s] - img[(y + v) * w + x + r_s];
+						temp = img.at<unsigned char>(j + v, i + r_s) - img.at<unsigned char>(y + v, x + r_s);
 						vCol[x + r_s][ctrInd] += (temp*temp);
 					}
 
@@ -171,10 +152,10 @@ namespace msdDetector
 					acc[ctrInd] = 0;
 					for (int u = -r_s; u <= r_s; u++)
 					{
-						temp = img[(j + r_s) * w + i + u] - img[(y + r_s) * w + x + u];
+						temp = img.at<unsigned char>(j + r_s, i + u) - img.at<unsigned char>(y + r_s, x + u);
 						vCol[x + u][ctrInd] += (temp*temp);
 
-						temp = img[(j - r_s - 1) * w + i + u] - img[(y - r_s - 1) * w + x + u];
+						temp = img.at<unsigned char>(j - r_s - 1, i + u) - img.at<unsigned char>(y - r_s - 1, x + u);
 						vCol[x + u][ctrInd] -= (temp*temp);
 
 						acc[ctrInd] += vCol[x + u][ctrInd];
@@ -214,10 +195,10 @@ namespace msdDetector
 						if (j == y && i == x)
 							continue;
 
-						temp = img[(j + r_s)*w + i + r_s] - img[(y + r_s) * w + x + r_s];
+						temp = img.at<unsigned char>(j + r_s, i + r_s) - img.at<unsigned char>(y + r_s, x + r_s);
 						vCol[x + r_s][ctrInd] += (temp*temp);
 
-						temp = img[(j - r_s - 1)*w + i + r_s] - img[(y - r_s - 1) * w + x + r_s];
+						temp = img.at<unsigned char>(j - r_s - 1, i + r_s) - img.at<unsigned char>(y - r_s - 1, x + r_s);
 						vCol[x + r_s][ctrInd] -= (temp*temp);
 
 						acc[ctrInd] = acc[ctrInd] + vCol[x + r_s][ctrInd] - vCol[x - r_s - 1][ctrInd];
@@ -249,14 +230,13 @@ namespace msdDetector
 		delete[] acc;
 	}
 
-	float computeOrientation(cv::Mat &img, int x, int y, int patch_radius, int search_area_radius, std::vector<cv::Point2f> circle)
+	float MsdDetector::computeOrientation(cv::Mat &img, int x, int y, std::vector<cv::Point2f> circle)
 	{
-
 		int temp;
 		int w = img.cols;
 		int h = img.rows;
 
-		int side = search_area_radius * 2 + 1;
+		int side = m_search_area_radius * 2 + 1;
 		int nBins = 36;
 		float step = float((2 * M_PI) / nBins);
 		std::vector<float> hist(nBins, 0);
@@ -271,9 +251,9 @@ namespace msdDetector
 			int j = y + static_cast <int> (circle[k].y);
 			int i = x + static_cast <int> (circle[k].x);
 
-			for (int v = -patch_radius; v <= patch_radius; v++)
+			for (int v = -m_patch_radius; v <= m_patch_radius; v++)
 			{
-				for (int u = -patch_radius; u <= patch_radius; u++)
+				for (int u = -m_patch_radius; u <= m_patch_radius; u++)
 				{
 					temp = img.at<unsigned char>(j + v, i + u) - img.at<unsigned char>(y + v, x + u);
 					dists[k] += temp*temp;
@@ -335,78 +315,15 @@ namespace msdDetector
 		return bestAngle2;
 	}
 
-	std::vector<cv::KeyPoint> msd_detector(cv::Mat &img, int patch_radius, int search_area_radius, int nms_radius, int nms_scale_radius, float th_saliency, int kNN, float scale_factor, int n_scales, bool compute_orientation)
+	void MsdDetector::nonMaximaSuppression(std::vector<float *> & saliency, std::vector<cv::KeyPoint> & keypoints)
 	{
-
-		int w = img.cols;
-		int h = img.rows;
-
-		int border = search_area_radius + patch_radius;
-
-		//aumatic computation of the number of scales
-		if (n_scales == -1)
-			n_scales = cvFloor(std::log(cv::min(img.cols, img.rows) / ((patch_radius + search_area_radius)*2.0 + 1)) / std::log(scale_factor));
-
-		cv::Mat imgG;
-		if (img.channels() == 1)
-			imgG = img;
-		else
-			cv::cvtColor(img, imgG, CV_BGR2GRAY);
-		
-		std::vector<unsigned char *> scaleSpaceArray;
-		std::vector<int> sswidths, ssheights;
-
-		ImagePyramid scaleSpacer(imgG, n_scales, scale_factor);
-		std::vector<cv::Mat> scaleSpaceGray = scaleSpacer.GetImPyrReadOnly();
-		
-		for (int r = 0; r < n_scales; r++)
-		{
-			unsigned char *imgT = new unsigned char[scaleSpaceGray[r].cols * scaleSpaceGray[r].rows];
-			convertMat2Array(scaleSpaceGray[r], imgT);
-			scaleSpaceArray.push_back(imgT);
-			sswidths.push_back(scaleSpaceGray[r].cols);
-			ssheights.push_back(scaleSpaceGray[r].rows);
-		}
-
-		std::vector<cv::KeyPoint> keypoints;
-		std::vector<float *> saliency;
-		saliency.resize(n_scales);
-
-		for (int r = 0; r < n_scales; r++)
-		{
-			saliency[r] = new float[sswidths[r] * ssheights[r]];
-		}
-
-		for (int r = 0; r<n_scales; r++)
-		{
-#ifdef BOOST_MULTICORE
-			unsigned nThreads = boost::thread::hardware_concurrency();
-			unsigned stepThread = (sswidths[r] - 2 * border) / nThreads;
-
-			std::vector<boost::thread*> threads;
-			for (unsigned i = 0; i < nThreads - 1; i++)
-			{
-				threads.push_back(new boost::thread(contextualSelfDissimilarity_runningAvg, scaleSpaceArray[r], sswidths[r], ssheights[r], border + i*stepThread, border + (i + 1)*stepThread, patch_radius, search_area_radius, kNN, saliency[r]));
-			}
-			threads.push_back(new boost::thread(contextualSelfDissimilarity_runningAvg, scaleSpaceArray[r], sswidths[r], ssheights[r], border + (nThreads - 1)*stepThread, sswidths[r] - border, patch_radius, search_area_radius, kNN, saliency[r]));
-
-			for (unsigned i = 0; i < threads.size(); i++)
-			{
-				threads[i]->join();
-				delete threads[i];
-			}
-#else
-			contextualSelfDissimilarity_runningAvg(scaleSpaceArray[r], sswidths[r], ssheights[r], border, sswidths[r] - border, patch_radius, search_area_radius, kNN, saliency[r]);
-#endif
-		}
-
-		// ********** NMS STAGE **********
 		cv::KeyPoint kp_temp;
-		int side = search_area_radius * 2 + 1;
+		int side = m_search_area_radius * 2 + 1;
+		int border = m_search_area_radius + m_patch_radius;
 
-		// ********** COMPUTE LUT FOR CANONICAL ORIENTATION **********
+		//COMPUTE LUT FOR CANONICAL ORIENTATION
 		std::vector<cv::Point2f> orientPoints;
-		if (compute_orientation)
+		if (m_compute_orientation)
 		{
 			int nBins = 36;
 			float step = float((2 * M_PI) / nBins);
@@ -415,8 +332,8 @@ namespace msdDetector
 			for (int i = 0; i<nBins; i++)
 			{
 				cv::Point2f pt;
-				pt.x = search_area_radius * cos(deltaAngle);
-				pt.y = search_area_radius * sin(deltaAngle);
+				pt.x = m_search_area_radius * cos(deltaAngle);
+				pt.y = m_search_area_radius * sin(deltaAngle);
 
 				orientPoints.push_back(pt);
 
@@ -424,24 +341,27 @@ namespace msdDetector
 			}
 		}
 
-		for (int r = 0; r<n_scales; r++)
+		for (int r = 0; r<m_cur_n_scales; r++)
 		{
-			for (int j = border; j< ssheights[r] - border; j++)
+			int cW = m_scaleSpace[r].cols;
+			int cH = m_scaleSpace[r].rows;
+		
+			for (int j = border; j< cH - border; j++)
 			{
-				for (int i = border; i< sswidths[r] - border; i++)
+				for (int i = border; i< cW - border; i++)
 				{
-					if (saliency[r][j * sswidths[r] + i] > th_saliency)
+					if (saliency[r][j * cW + i] > m_th_saliency)
 					{
 						bool is_max = true;
 
-						for (int k = cv::max(0, r - nms_scale_radius); k <= cv::min(n_scales - 1, r + nms_scale_radius); k++)
+						for (int k = cv::max(0, r - m_nms_scale_radius); k <= cv::min(m_cur_n_scales - 1, r + m_nms_scale_radius); k++)
 						{
 							if (k != r)
 							{
-								int j_sc = cvRound(j * std::pow(scale_factor, r - k));
-								int i_sc = cvRound(i * std::pow(scale_factor, r - k));
+								int j_sc = cvRound(j * std::pow(m_scale_factor, r - k));
+								int i_sc = cvRound(i * std::pow(m_scale_factor, r - k));
 
-								if (saliency[r][j*sswidths[r] + i] < saliency[k][j_sc*sswidths[r] + i_sc])
+								if (saliency[r][j*cW + i] < saliency[k][j_sc*cW + i_sc])
 								{
 									is_max = false;
 									break;
@@ -449,11 +369,11 @@ namespace msdDetector
 							}
 						}
 
-						for (int v = cv::max(border, j - nms_radius); v <= cv::min(ssheights[r] - border - 1, j + nms_radius); v++)
+						for (int v = cv::max(border, j - m_nms_radius); v <= cv::min(cH - border - 1, j + m_nms_radius); v++)
 						{
-							for (int u = cv::max(border, i - nms_radius); u <= cv::min(sswidths[r] - border - 1, i + nms_radius); u++)
+							for (int u = cv::max(border, i - m_nms_radius); u <= cv::min(cW - border - 1, i + m_nms_radius); u++)
 							{
-								if (saliency[r][j*sswidths[r] + i] < saliency[r][v*sswidths[r] + u])
+								if (saliency[r][j*cW + i] < saliency[r][v*cW + u])
 								{
 									is_max = false;
 									break;
@@ -466,13 +386,13 @@ namespace msdDetector
 
 						if (is_max)
 						{
-							kp_temp.pt.x = i * std::pow(scale_factor, r);
-							kp_temp.pt.y = j * std::pow(scale_factor, r);
-							kp_temp.response = saliency[r][j*sswidths[r] + i];
-							kp_temp.size = (patch_radius*2.0f + 1) * std::pow(scale_factor, r);
+							kp_temp.pt.x = i * std::pow(m_scale_factor, r);
+							kp_temp.pt.y = j * std::pow(m_scale_factor, r);
+							kp_temp.response = saliency[r][j*cW + i];
+							kp_temp.size = (m_patch_radius*2.0f + 1) * std::pow(m_scale_factor, r);
 
-							if (compute_orientation)
-								kp_temp.angle = computeOrientation(scaleSpaceGray[r], i, j, patch_radius, search_area_radius, orientPoints);
+							if (m_compute_orientation)
+								kp_temp.angle = computeOrientation(m_scaleSpace[r], i, j, orientPoints);
 
 							keypoints.push_back(kp_temp);
 						}
@@ -481,12 +401,67 @@ namespace msdDetector
 			}
 		}
 
-		for (int r = 0; r<n_scales; r++)
-		{
-			delete[] scaleSpaceArray[r];
-			delete[] saliency[r];
-		}
-		return keypoints;
 	}
 
-}
+	std::vector<cv::KeyPoint> MsdDetector::detect(cv::Mat &img)
+	{
+		int border = m_search_area_radius + m_patch_radius;
+
+		//automatic computation of the number of scales
+		if (m_n_scales == -1)
+			m_cur_n_scales = cvFloor(std::log(cv::min(img.cols, img.rows) / ((m_patch_radius + m_search_area_radius)*2.0 + 1)) / std::log(m_scale_factor));
+		else
+			m_cur_n_scales = m_n_scales;
+
+		cv::Mat imgG;
+		if (img.channels() == 1)
+			imgG = img;
+		else
+			cv::cvtColor(img, imgG, CV_BGR2GRAY);
+
+		ImagePyramid scaleSpacer(imgG, m_cur_n_scales, m_scale_factor);
+		m_scaleSpace = scaleSpacer.getImPyr();
+		
+		std::vector<cv::KeyPoint> keypoints;
+		std::vector<float *> saliency;
+		saliency.resize(m_cur_n_scales);
+
+		for (int r = 0; r < m_cur_n_scales; r++)
+		{
+			saliency[r] = new float[m_scaleSpace[r].rows * m_scaleSpace[r].cols];
+		}
+
+		for (int r = 0; r<m_cur_n_scales; r++)
+		{
+#ifdef BOOST_MULTICORE
+			unsigned nThreads = boost::thread::hardware_concurrency();
+			unsigned stepThread = (m_scaleSpace[r].cols - 2 * border) / nThreads;
+
+			std::vector<boost::thread*> threads;
+			for (unsigned i = 0; i < nThreads - 1; i++)
+			{
+				threads.push_back(new boost::thread(&MsdDetector::contextualSelfDissimilarity, this, m_scaleSpace[r], border + i*stepThread, border + (i + 1)*stepThread, saliency[r]));
+			}
+			threads.push_back(new boost::thread(&MsdDetector::contextualSelfDissimilarity, this, m_scaleSpace[r], border + (nThreads - 1)*stepThread, m_scaleSpace[r].cols - border, saliency[r]));
+
+			for (unsigned i = 0; i < threads.size(); i++)
+			{
+				threads[i]->join();
+				delete threads[i];
+			}
+#else
+			contextualSelfDissimilarity(m_scaleSpace[r], border, m_scaleSpace[r].cols - border, saliency[r]);
+#endif
+		}
+
+		nonMaximaSuppression(saliency, keypoints);
+
+		for (int r = 0; r<m_n_scales; r++)
+		{
+			delete[] saliency[r];
+		}
+
+		m_scaleSpace.clear();
+
+		return keypoints;
+	}
