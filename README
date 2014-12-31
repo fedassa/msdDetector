@@ -1,6 +1,6 @@
-Maximal Self-Dissimilarity Interest Point Detector
+    Maximal Self-Dissimilarity Interest Point Detector
 	Computer Vision Laboratory, University of Bologna
-		http://www.vision.deis.unibo.it
+		   www.vision.deis.unibo.it/fede
 
 This is an implementation of the work presented in the paper
 
@@ -26,13 +26,13 @@ parameters.
 The MSD code is released under GNU GPL v3.0 license. 
 
 DEPENDENCIES and BUILD:
-The only required dependency is OpenCV (opencv.org, v3.0 or above). Boost (v1.49 or above, 
-www.boost.org) is not required, but used for multi-thread optimization. It is expected 
-that the running time of MSD can be sped up notably on a multi-core architecture by using 
-the provided Boost multi-thread optimization. 
+The only required dependency is OpenCV (opencv.org, v3.0 or above). Boost (v1.49 
+or above, www.boost.org) is not required, but used for multi-thread optimization. 
+It is expected that the running time of MSD can be sped up notably on a multi-core 
+architecture by using the provided Boost multi-thread optimization. 
 
-We provide a CMakeFile, so that the code can be build over different compilers and platforms
-by making use of CMake (www.cmake.org).
+We provide a CMakeFile, so that the code can be build over different compilers 
+and platforms by making use of CMake (www.cmake.org).
 
 CONTACTS:
   Federico Tombari <federico.tombari@unibo.it> 

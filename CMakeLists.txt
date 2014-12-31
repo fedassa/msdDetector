@@ -87,7 +87,7 @@ if(Boost_FOUND)
  include_directories(${Boost_INCLUDE_DIRS})
  link_directories(${Boost_LIBRARY_DIRS})
 else(Boost_FOUND)
-  set(BOOST_LIBRARYDIR "" CACHE PATH "Root of Boost installation")
+ set(BOOST_LIBRARYDIR "" CACHE PATH "Root of Boost installation")
 endif(Boost_FOUND)
 
 # #OpenCV
