@@ -23,35 +23,35 @@
 #include <time.h>
 #include <iostream>
 
-void main()
+int main()
 {
 	//open a test image
+#ifdef WIN32
 	std::string filename = "../../../data/flinstones.png";
+#else
+	std::string filename = "../../data/flinstones.png";
+#endif
 	cv::Mat img = cv::imread(filename, 0);
 	
 	MsdDetector msd;
-
-	//Mode 1: calling MSD detector with default parameters
-	std::vector<cv::KeyPoint> keypoints = msd.detect(img);
 	
-	//Mode 2: calling MSD detector with custom parameters
+	//If you want to use custom MSD parameters rather than using the default ones, 
 	//uncomment the following code and modify the default values where needed
-	/*setPatchRadius(3);
-	setSearchAreaRadius(5);
+	/*msd.setPatchRadius(3);
+	msd.setSearchAreaRadius(5);
 
-	setNMSRadius(5);
-	setNMSScaleRadius(0);
+	msd.setNMSRadius(5);
+	msd.setNMSScaleRadius(0);
 
-	setThSaliency(250.0f);
-	setKNN(4);
+	msd.setThSaliency(250.0f);
+	msd.setKNN(4);
 
-	setScaleFactor(1.25f);
-	setNScales(-1);
+	msd.setScaleFactor(1.25f);
+	msd.setNScales(-1);
 
-	setComputeOrientation(false);
+	msd.setComputeOrientation(false);*/
 
 	std::vector<cv::KeyPoint> keypoints = msd.detect(img);
-	*/
 
 	std::cout << "Found " << keypoints.size() << " keypoints" << std::endl;
 
@@ -67,4 +67,5 @@ void main()
 	cv::imshow("MSD Keypoints", kpsImg);
 	cv::waitKey(0);
 
+	return 0;
 }
