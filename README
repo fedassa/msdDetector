@@ -5,7 +5,7 @@
 This is an implementation of the work presented in the paper
 
 [1] F. Tombari, L. Di Stefano 
-ìInterest Points via Maximal Self-Dissimilaritiesî
+‚ÄúInterest Points via Maximal Self-Dissimilarities‚Äù
 12th Asian Conference on Computer Vision (ACCV), 2014
 
 We kindly request to cite and adequately refer to this work any time this code is 
@@ -23,7 +23,9 @@ associates each interest point to a 2D coordinate, a scale, a saliency value and
 of default parameters (those used in [1]), as well as with a set of user-defined
 parameters. 
 
-The MSD code is released under GNU GPL v3.0 license. 
+The MSD code is released under the GNU GPLv3 license. A version of this code under 
+a different licensing agreement, intended for commercial use, is also available. 
+Please contact me if interested.
 
 DEPENDENCIES and BUILD:
 The only required dependency is OpenCV (opencv.org, v3.0 or above). Boost (v1.49 
